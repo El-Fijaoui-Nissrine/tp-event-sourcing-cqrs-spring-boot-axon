@@ -1,8 +1,12 @@
 package com.example.demo_es_cqrs_axon.commands.aggregates;
 
 import com.example.demo_es_cqrs_axon.commands.commands.AddAccountCommand;
+import com.example.demo_es_cqrs_axon.commands.commands.CreditAccountCommand;
+import com.example.demo_es_cqrs_axon.commands.commands.DebitAccountCommand;
 import com.example.demo_es_cqrs_axon.enums.AccountStatus;
 import com.example.demo_es_cqrs_axon.events.AccountCreatedEvent;
+import com.example.demo_es_cqrs_axon.events.AccountCreditedEvent;
+import com.example.demo_es_cqrs_axon.events.AccountDebitedEvent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +26,7 @@ public class AccountAggregate {
     private String accountId;
     private double balance;
     private AccountStatus status;
+    private String currency ;
     public AccountAggregate(){}
 @CommandHandler
     public AccountAggregate(AddAccountCommand command){
@@ -37,12 +42,47 @@ if (command.getInitialBalance()<0) throw  new IllegalArgumentException("balance 
 
 @EventSourcingHandler
     public void on(AccountCreatedEvent event){
-    log.info("CreateAccount Command Received");
         this.accountId=event.getAccountId();
     this.balance=event.getInitialBalance();
     this.status=event.getStatus();
-
+this.currency=event.getCurrency();
 
 }
+@CommandHandler
+public void handle(CreditAccountCommand command){
+    log.info("CreditAccount Command Received");
+    if(command.getAmount()<0) throw new RuntimeException("amount most be positive");
+   AggregateLifecycle.apply(new AccountCreditedEvent(
+           command.getAccountId(),
+           command.getAmount(),
+           command.getCurrency()
+   ));
+}
+    @EventSourcingHandler
+    public void on(AccountCreditedEvent event){
+
+        this.balance=this.balance+event.getAmount();
+
+
+    }
+
+    @CommandHandler
+    public void handle(DebitAccountCommand command){
+        log.info("debittAccount Command Received");
+        if(command.getAmount()>this.balance) throw new RuntimeException("balance not sufficient Exception");
+        AggregateLifecycle.apply(new AccountDebitedEvent(
+                command.getAccountId(),
+                command.getAmount(),
+                command.getCurrency()
+        ));
+    }
+    @EventSourcingHandler
+    public void on(AccountDebitedEvent event){
+
+        this.balance=this.balance-event.getAmount();
+
+
+    }
+
 
 }
