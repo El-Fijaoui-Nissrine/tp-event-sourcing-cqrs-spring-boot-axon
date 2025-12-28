@@ -1,6 +1,7 @@
 package com.example.demo_es_cqrs_axon.query.entities;
 
 import com.example.demo_es_cqrs_axon.enums.AccountStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
@@ -20,5 +21,6 @@ public class Account {
     private AccountStatus status;
     private String currency ;
     @OneToMany(mappedBy = "account")
+    @JsonIgnore
     private List<AccountTransaction> accountTransactions;
 }

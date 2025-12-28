@@ -4,6 +4,7 @@ import lombok.*;
 
 @AllArgsConstructor
 @Getter
+@NoArgsConstructor
 public class GetAccountStatementQuery {
     private String accountId;
 }
